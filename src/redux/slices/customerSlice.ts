@@ -6,7 +6,9 @@ export interface Customer {
   name: string;
   contactPerson: string;
   email: string;
+  password?: string;
   phone: string;
+  address: string;
   category: string;
   status: 'Active' | 'Inactive' | 'On Hold';
 }

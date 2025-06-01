@@ -1,7 +1,7 @@
-
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
+import axios from 'axios';
 
 // Default admin credentials - in a real app, these would be stored securely
 const DEFAULT_ADMIN = {
@@ -10,12 +10,15 @@ const DEFAULT_ADMIN = {
 };
 
 interface User {
-  username: string;
+  id: string;
+  email: string;
+  name: string;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -38,22 +41,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    // In a real app, you would validate against a backend API
-    if (username === DEFAULT_ADMIN.username && password === DEFAULT_ADMIN.password) {
-      const user = { username };
-      setUser(user);
-      localStorage.setItem('paintShopUser', JSON.stringify(user));
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      // Check for default admin login on frontend (for demo/dev only)
+      if (email === 'admin@paintshop.com' && password === 'admin123') {
+        const adminUser = {
+          id: 'admin',
+          email: 'admin@paintshop.com',
+          name: 'Admin',
+          isAdmin: true,
+        };
+        setUser(adminUser);
+        localStorage.setItem('paintShopUser', JSON.stringify(adminUser));
+        localStorage.setItem('paintShopToken', 'admin-token');
+        toast({
+          title: 'Admin Login Successful',
+          description: 'Welcome, Admin!',
+        });
+        return true;
+      }
+      // Otherwise, call backend for customer login
+      const res = await axios.post('/api/customers/login', { email, password });
+      const { token, customer } = res.data;
+      setUser(customer);
+      localStorage.setItem('paintShopUser', JSON.stringify(customer));
+      localStorage.setItem('paintShopToken', token);
       toast({
-        title: "Login Successful",
-        description: "Welcome to Paint Shop Management System",
+        title: 'Login Successful',
+        description: 'Welcome to Paint Shop Management System',
       });
       return true;
-    } else {
+    } catch (err: any) {
       toast({
-        title: "Login Failed",
-        description: "Invalid username or password",
-        variant: "destructive",
+        title: 'Login Failed',
+        description: err.response?.data?.message || 'Invalid email or password',
+        variant: 'destructive',
       });
       return false;
     }
@@ -62,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('paintShopUser');
+    localStorage.removeItem('paintShopToken');
     navigate('/login');
     toast({
       title: "Logged Out",

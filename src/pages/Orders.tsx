@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Card,
@@ -37,6 +36,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, FileText, Plus, Trash2, Check } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 // Product data type
 interface Product {
@@ -67,72 +68,11 @@ interface Order {
   status: "Pending" | "Completed" | "Cancelled";
 }
 
-// Sample products - normally this would be fetched from a database or API
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Premium White Paint - 1 Gallon",
-    category: "Paints",
-    price: 45.99,
-    discount: 0,
-    stock: 25,
-  },
-  {
-    id: 2,
-    name: "Professional Brush Set",
-    category: "Brushes",
-    price: 32.50,
-    discount: 10,
-    stock: 15,
-  },
-  {
-    id: 3,
-    name: "Paint Roller Kit",
-    category: "Tools",
-    price: 24.99,
-    discount: 0,
-    stock: 20,
-  },
-  {
-    id: 4,
-    name: "Anti-Rust Primer - 1 Quart",
-    category: "Primers",
-    price: 18.75,
-    discount: 5,
-    stock: 18,
-  },
-];
-
-// Sample orders
-const initialOrders: Order[] = [
-  {
-    id: 1,
-    customerName: "John Smith",
-    items: [
-      {
-        productId: 1,
-        name: "Premium White Paint - 1 Gallon",
-        price: 45.99,
-        discount: 0,
-        quantity: 2,
-      },
-      {
-        productId: 3,
-        name: "Paint Roller Kit",
-        price: 24.99,
-        discount: 0,
-        quantity: 1,
-      },
-    ],
-    total: 116.97,
-    date: "2025-05-10",
-    status: "Completed",
-  },
-];
-
 const Orders = () => {
   const { toast } = useToast();
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false);
   const [isBillDialogOpen, setIsBillDialogOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
@@ -142,6 +82,22 @@ const Orders = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const res = await axios.get(`/api/billing/customer/${user.email}/invoices`);
+        setOrders(res.data);
+      } catch (err: any) {
+        toast({ title: 'Error', description: 'Failed to fetch order history', variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [user]);
   
   // Function to add item to order
   const addItemToOrder = () => {

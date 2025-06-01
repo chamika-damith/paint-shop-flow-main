@@ -171,7 +171,7 @@ const Billing = () => {
       
       Items:
       ${invoice.items?.map((item: any) => 
-        `- ${item.item.name}: ${item.quantity} x $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}`
+        `- ${item.item && item.item.name ? item.item.name : 'Unknown'}: ${item.quantity} x $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}`
       ).join('\n')}
       
       Total: $${invoice.amount.toFixed(2)}
@@ -215,7 +215,7 @@ const Billing = () => {
                 <tbody>
                   ${invoice.items?.map((item: any) => `
                     <tr>
-                      <td style="text-align: left; padding: 8px;">${item.item.name}</td>
+                      <td style="text-align: left; padding: 8px;">${item.item && item.item.name ? item.item.name : 'Unknown'}</td>
                       <td style="text-align: right; padding: 8px;">${item.quantity}</td>
                       <td style="text-align: right; padding: 8px;">$${item.price.toFixed(2)}</td>
                       <td style="text-align: right; padding: 8px;">$${(item.quantity * item.price).toFixed(2)}</td>
@@ -661,8 +661,8 @@ const Billing = () => {
                     <TableBody>
                       {(selectedInvoice.items || []).map((item: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell>{item.item.name}</TableCell>
-                          <TableCell>{item.item.description || 'N/A'}</TableCell>
+                          <TableCell>{item.item ? item.item.name : 'Unknown'}</TableCell>
+                          <TableCell>{item.item && item.item.description ? item.item.description : 'N/A'}</TableCell>
                           <TableCell className="text-right">{item.quantity}</TableCell>
                           <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
                           <TableCell className="text-right">${(item.quantity * item.price).toFixed(2)}</TableCell>
