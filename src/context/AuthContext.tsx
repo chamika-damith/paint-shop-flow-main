@@ -2,6 +2,8 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
 import axios from 'axios';
+import api from '@/api/config';
+
 
 // Default admin credentials - in a real app, these would be stored securely
 const DEFAULT_ADMIN = {
@@ -61,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
       // Otherwise, call backend for customer login
-      const res = await axios.post('/api/customers/login', { email, password });
+      const res = await api.post('/customers/login', { email, password });
       const { token, customer } = res.data;
       setUser(customer);
       localStorage.setItem('paintShopUser', JSON.stringify(customer));

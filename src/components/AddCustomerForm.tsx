@@ -37,6 +37,9 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
+  password: z.string().min(6, {
+    message: "Password must be at least 6 characters.",
+  }),
   phone: z.string().min(10, {
     message: "Phone number must be at least 10 characters.",
   }),
@@ -57,7 +60,13 @@ interface AddCustomerFormProps {
   isEditing?: boolean;
 }
 
-const AddCustomerForm = ({ open, onClose, onSave, initialData, isEditing = false }: AddCustomerFormProps) => {
+const AddCustomerForm = ({
+  open,
+  onClose,
+  onSave,
+  initialData,
+  isEditing = false,
+}: AddCustomerFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,6 +75,7 @@ const AddCustomerForm = ({ open, onClose, onSave, initialData, isEditing = false
       name: "",
       contactPerson: "",
       email: "",
+      password: "",
       phone: "",
       category: "",
       status: "Active",
@@ -73,11 +83,15 @@ const AddCustomerForm = ({ open, onClose, onSave, initialData, isEditing = false
     },
   });
 
-  // Update form values when initialData changes
   useEffect(() => {
     if (initialData) {
       Object.keys(initialData).forEach((key) => {
-        form.setValue(key as keyof z.infer<typeof formSchema>, initialData[key]);
+        if (key in form.getValues()) {
+          form.setValue(
+            key as keyof z.infer<typeof formSchema>,
+            initialData[key]
+          );
+        }
       });
     }
   }, [initialData, form]);
@@ -149,6 +163,22 @@ const AddCustomerForm = ({ open, onClose, onSave, initialData, isEditing = false
                 </FormItem>
               )}
             />
+
+            {!isEditing && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Enter password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -239,4 +269,4 @@ const AddCustomerForm = ({ open, onClose, onSave, initialData, isEditing = false
   );
 };
 
-export default AddCustomerForm; 
+export default AddCustomerForm;

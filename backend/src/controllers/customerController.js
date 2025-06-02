@@ -1,4 +1,5 @@
 const Customer = require('../models/Customer');
+const Order = require('../models/Order');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
@@ -22,6 +23,38 @@ exports.getCustomerById = async (req, res) => {
     } else {
       res.status(404).json({ message: 'Customer not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get customer order history by email
+exports.getCustomerOrderHistory = async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // Find customer first to verify existence
+    const customer = await Customer.findOne({ email });
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    // Find orders for this customer
+    // Adjust the query based on your Order model structure
+    const orders = await Order.find({ 
+      customerEmail: email // or customerId: customer._id, depending on your schema
+    }).sort({ date: -1 }); // Sort by date, newest first
+
+    // Transform orders to match the expected format
+    const formattedOrders = orders.map(order => ({
+      _id: order._id,
+      date: order.date || order.createdAt,
+      amount: order.amount || order.total,
+      status: order.status,
+      items: order.items || []
+    }));
+
+    res.json(formattedOrders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -109,4 +142,4 @@ exports.deleteCustomer = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}; 
+};

@@ -30,7 +30,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 const DashboardSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const navItems = [

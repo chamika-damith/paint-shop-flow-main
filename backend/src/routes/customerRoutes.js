@@ -8,6 +8,9 @@ router.get('/', customerController.getAllCustomers);
 // Get a single customer
 router.get('/:id', customerController.getCustomerById);
 
+// Get customer order history by email
+router.get('/:email/orders', customerController.getCustomerOrderHistory);
+
 // Create a new customer
 router.post('/', customerController.createCustomer);
 
@@ -20,4 +23,4 @@ router.delete('/:id', customerController.deleteCustomer);
 // Customer login
 router.post('/login', customerController.loginCustomer);
 
-module.exports = router; 
+module.exports = router;
