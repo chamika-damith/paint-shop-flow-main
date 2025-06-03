@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, Package, FileText, DollarSign, Users, Settings, LogOut, Menu, X, Truck } from "lucide-react";
+import { Home, Package, FileText, DollarSign, Users, Settings, LogOut, Menu, X, Truck, ShoppingCart } from "lucide-react";
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -40,6 +40,7 @@ const DashboardSidebar = () => {
     { path: "/finances", label: "Finances", icon: DollarSign },
     { path: "/suppliers", label: "Suppliers", icon: Truck },
     { path: "/customers", label: "Customers", icon: Users },
+    { path: "/orders", label: "Orders", icon: ShoppingCart },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 

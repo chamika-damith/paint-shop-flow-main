@@ -70,12 +70,22 @@ exports.createCustomer = async (req, res) => {
         return res.status(400).json({ message: `Missing required field: ${field}` });
       }
     }
+    
+    // Validate password
+    if (req.body.password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+    
     // Check for existing email
     const existing = await Customer.findOne({ email: req.body.email });
     if (existing) {
       return res.status(400).json({ message: 'A customer with this email already exists' });
     }
+    
+    // Hash password
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    console.log('Password hashed successfully, length:', hashedPassword.length);
+    
     const customer = new Customer({
       name: req.body.name,
       contactPerson: req.body.contactPerson,
@@ -87,29 +97,71 @@ exports.createCustomer = async (req, res) => {
       status: req.body.status || 'Active',
       isAdmin: req.body.isAdmin || false,
     });
+    
     const newCustomer = await customer.save();
-    res.status(201).json(newCustomer);
+    console.log('Customer created successfully:', newCustomer.email);
+    
+    // Return customer without password
+    const { password: _, ...customerResponse } = newCustomer.toObject();
+    res.status(201).json(customerResponse);
   } catch (error) {
+    console.error('Create customer error:', error);
     res.status(400).json({ message: error.message });
   }
 };
 
-// Customer login
+// Customer login - EMAIL ONLY VERSION
 exports.loginCustomer = async (req, res) => {
-  const { email, password } = req.body;
+  const { email } = req.body;
+  
   try {
+    // Validate input - only email required
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Find customer by email only
     const customer = await Customer.findOne({ email });
     if (!customer) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Customer not found with this email' });
     }
-    const isMatch = await bcrypt.compare(password, customer.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+
+    // Check if customer is active
+    if (customer.status !== 'Active') {
+      return res.status(400).json({ message: 'Customer account is not active' });
     }
-    const token = jwt.sign({ id: customer._id, email: customer.email, isAdmin: customer.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, customer: { id: customer._id, email: customer.email, name: customer.name, isAdmin: customer.isAdmin } });
+
+    console.log('Customer login successful:', customer.email);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: customer._id.toString(), // Convert ObjectId to string
+        email: customer.email, 
+        isAdmin: customer.isAdmin || false 
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
+
+    // Return response with properly formatted customer object
+    res.json({ 
+      token, 
+      customer: { 
+        id: customer._id.toString(), // Convert ObjectId to string for frontend
+        email: customer.email, 
+        name: customer.name, 
+        isAdmin: customer.isAdmin || false,
+        contactPerson: customer.contactPerson,
+        phone: customer.phone,
+        address: customer.address,
+        category: customer.category,
+        status: customer.status
+      } 
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
